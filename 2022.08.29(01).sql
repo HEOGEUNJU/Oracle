@@ -139,15 +139,16 @@
       
   
   
- 사용예) 사원테이블에서 사원번호, 사원명, 부서명, 입사일을 출력하시오         
---(일반조인)--  
+--사용예-- 
+ 사원테이블에서 사원번호, 사원명, 부서명, 입사일을 출력하시오         
+  (일반조인)  
   SELECT A.EMPLOYEE_ID AS 사원번호, 
          A.EMP_NAME AS 사원명, 
          B.DEPARTMENT_NAME AS 부서명, 
          A.HIRE_DATE AS 입사일         
     FROM HR.Employees A, HR.Departments B
    WHERE A.DEPARTMENT_ID = B.DEPARTMENT_ID 
---(ANSI조인)-- 
+  (ANSI조인) 
   SELECT EMPLOYEE_ID AS 사원번호, 
          EMP_NAME AS 사원명, 
          DEPARTMENT_NAME AS 부서명, 
@@ -155,9 +156,10 @@
     FROM HR.Employees A      
    INNER JOIN HR.Departments B ON(A.DEPARTMENT_ID = B.DEPARTMENT_ID)      
          
- 사용예) 2020년 4월 회원별, 상품별 판매집계를 조회하시오        
-         Alias는 회원번호, 회원명, 상품명, 구매수량합계, 구매금액합계   
---(일반조인)-- 
+--사용예-- 
+ 2020년 4월 회원별, 상품별 판매집계를 조회하시오        
+ Alias는 회원번호, 회원명, 상품명, 구매수량합계, 구매금액합계   
+  (일반조인) 
   SELECT A.CART_MEMBER AS 회원번호, 
          B.MEM_NAME AS 회원명, 
          C.PROD_NAME AS 상품명, 
@@ -169,7 +171,7 @@
      AND SUBSTR(A.CART_NO,1,6) = '202004'
    GROUP BY A.CART_MEMBER, B.MEM_NAME, C.PROD_NAME
    ORDER BY 1;
---(ANSI조인)--  
+  (ANSI조인)  
   SELECT A.CART_MEMBER AS 회원번호, 
          B.MEM_NAME AS 회원명, 
          C.PROD_NAME AS 상품명, 
@@ -183,29 +185,53 @@
    GROUP BY A.CART_MEMBER, B.MEM_NAME, C.PROD_NAME
    ORDER BY 1;      
          
- 사용예) 2020년 5월 거래처별 매출집계를 조회하시오
-         Alias는 거래처코드, 거래처명, 매출금액합계
---(ANSI조인)--    
+--(사용예)--
+ 2020년 5월 거래처별 매출집계를 조회하시오
+ Alias는 거래처코드, 거래처명, 매출금액합계
+  (ANSI조인)    
   SELECT B.BUYER_ID AS 거래처코드, 
          B.BUYER_NAME AS 거래처명, 
          SUM(C.CART_QTY*A.PROD_PRICE) AS 매출금액합계
     FROM PROD A
-   INNER JOIN BUYER B ON(A.PROD_LGU = B.BUYER_LGU)
-   INNER JOIN CART C ON(A.PROD_ID = C.CART_PROD)
-   WHERE SUBSTR(C.CART_NO,1,6) = '202005'
+   INNER JOIN BUYER B ON(A.PROD_BUYER = B.BUYER_ID)
+   INNER JOIN CART C ON(A.PROD_ID = C.CART_PROD
+     AND SUBSTR(C.CART_NO,1,6) = '202005')
    GROUP BY B.BUYER_ID, B.BUYER_NAME
    ORDER BY 1; 
-     
- 사용예) HR계정에서 미국 이외의 국가에 위치한 부서정보를 조회하시오
-         Alias는 부서번호, 부서명, 주소, 국가
+  (일반조인)
+  SELECT B.BUYER_ID AS 거래처코드, 
+         B.BUYER_NAME AS 거래처명, 
+         SUM(C.CART_QTY*A.PROD_PRICE) AS 매출금액합계
+    FROM PROD A, BUYER B, CART C
+--   WHERE A.PROD_LGU = B.BUYER_LGU
+    WHERE A.PROD_BUYER = B.BUYER_ID
+     AND A.PROD_ID = C.CART_PROD
+     AND SUBSTR(C.CART_NO,1,6) = '202005'
+   GROUP BY B.BUYER_ID, B.BUYER_NAME
+   ORDER BY 1;
+   
+--사용예-- 
+ HR계정에서 미국 이외의 국가에 위치한 부서정보를 조회하시오
+ Alias는 부서번호, 부서명, 주소, 국가
+  (ANSI조인)
   SELECT B.DEPARTMENT_ID AS 부서번호, 
          B.DEPARTMENT_NAME AS 부서명, 
          A.COUNTRY_ID||' '||A.CITY||' '||A.STREET_ADDRESS AS 주소, 
          C.COUNTRY_NAME AS 국가      
     FROM HR.Locations A 
-   INNER JOIN HR.Departments B ON(A.LOCATION_ID = B.LOCATION_ID)
    INNER JOIN HR.Countries C ON(A.COUNTRY_ID = C.COUNTRY_ID)
+   INNER JOIN HR.Departments B ON(A.LOCATION_ID = B.LOCATION_ID)
    WHERE C.COUNTRY_ID != 'US'
    
+  (일반조인)
+  SELECT B.DEPARTMENT_ID AS 부서번호, 
+         B.DEPARTMENT_NAME AS 부서명, 
+         A.COUNTRY_ID||' '||A.CITY||' '||A.STREET_ADDRESS AS 주소, 
+         C.COUNTRY_NAME AS 국가      
+    FROM HR.Locations A, HR.Departments B, HR.Countries C
+   WHERE A.LOCATION_ID = B.LOCATION_ID
+     AND A.COUNTRY_ID = C.COUNTRY_ID
+     AND C.COUNTRY_ID != 'US'
+         
          
          
