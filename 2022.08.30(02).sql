@@ -83,7 +83,7 @@
          A.BUYER_NAME AS 거래처명, 
          NVL(TBL.BSUM,0) AS 매입금액합계
     FROM BUYER A, 
-         (--2020SUS 6월 거래처별 매입금액합계
+         (--2020년 6월 거래처별 매입금액합계
          SELECT C.PROD_BUYER AS CID,
                 SUM(B.BUY_QTY*C.PROD_COST) AS BSUM
            FROM BUYPROD B, PROD C
@@ -96,19 +96,86 @@
  
   
 --사용예--
-  2020년 상반기(1-6월) 모든 제품별 매입수량집계를 조회하시오
+  2020년 상반기(4-6월) 모든 제품별 매입수량집계를 조회하시오 --제고관리를 하고자 할 때 사용/전년도에서부터 넘어온 각제품별 재고수량 : 기초재고
+  (일반외부조인)--외부조인의 제한사항, 외부조인을 사용했지만 내부조인으로 결괏값이 도출됨
+  SELECT B.PROD_ID AS 제품코드,    
+         B.PROD_NAME AS 제품명, 
+         SUM(A.BUY_QTY)매입수량합계
+    FROM BUYPROD A, PROD B
+   WHERE A.BUY_PROD(+)=B.PROD_ID
+     AND A.BUY_DATE BETWEEN TO_DATE('20200101') AND TO_DATE('20200131')
+   GROUP BY B.PROD_ID, B.PROD_NAME
+   ORDER BY 1
+  (ANSI FORMAT)  --반드시 ON절에 WHERE절을 써야함
+  SELECT B.PROD_ID AS 제품코드,    
+         B.PROD_NAME AS 제품명, 
+         SUM(A.BUY_QTY)매입수량합계
+    FROM BUYPROD A 
+   RIGHT OUTER JOIN PROD B ON(A.BUY_PROD = B.PROD_ID AND
+         A.BUY_DATE BETWEEN TO_DATE('20200101') AND TO_DATE('20200131'))
+--   RIGHT OUTER JOIN PROD B ON(A.BUY_PROD = B.PROD_ID)
+--   WHERE A.BUY_DATE BETWEEN TO_DATE('20200101') AND TO_DATE('20200131')
+   GROUP BY B.PROD_ID, B.PROD_NAME
+   ORDER BY 1;
   
   
-  
+  (SUBQUERY)
+  SELECT B.PROD_ID AS 제품코드,    
+         B.PROD_NAME AS 제품명, 
+         매입수량합계
+    FROM PROD B,
+         (2020년 1월 제품별 매입수량 집계--내부조인)A
+   WHERE B.PROD_ID=A.BUY_PROD(+)
+   ORDER BY 1;
+                
+  (서브쿼리:2020년 1월 제품별 매입수량 집계--내부조인)
+  SELECT BUY_PROD,
+         SUM(BUY_QTY) AS BSUM
+    FROM BUYPROD     
+   WHERE BUY_DATE BETWEEN TO_DATE('20200101') AND TO_DATE('20200131')
+   GROUP BY BUY_PROD
+                   
+                   
+  (결합) 
+  SELECT B.PROD_ID AS 제품코드,    
+         B.PROD_NAME AS 제품명, 
+         A.BSUM매입수량합계
+    FROM PROD B,                                            
+         (SELECT BUY_PROD,
+                SUM(BUY_QTY) AS BSUM
+         FROM BUYPROD      
+        WHERE BUY_DATE BETWEEN TO_DATE('20200101') AND TO_DATE('20200131')
+        GROUP BY BUY_PROD) A
+   WHERE B.PROD_ID=A.BUY_PROD(+)
+   ORDER BY 1;
+    
+    
+    
 --사용예--
-  2020년 상반기(1-6월) 모든 제품별 매출수량집계를 조회하시오
-  
-   
+  2020년 4월 모든 제품별 매출수량집계를 조회하시오
+  Alias는 제품코드, 제품명, 매출수량합계
+  (ANSI FORMAT)
+  SELECT A.PROD_ID AS 제품코드, 
+         A.PROD_NAME AS 제품명, 
+         SUM(CART_QTY) AS 매출수량합계
+    FROM PROD A
+    LEFT OUTER JOIN CART B ON(B.CART_PROD=A.PROD_ID AND B.CART_NO LIKE '202004%')
+   GROUP BY A.PROD_ID, A.PROD_NAME  
+   ORDER BY 1; 
    
 --사용예--
-  2020년 상반기(1-6월) 모든 
-   
-   
+  2020년 6월 모든 제품별 매입/매출수량집계를 조회하시오
+  SELECT A.PROD_ID AS 제품코드, 
+         A.PROD_NAME AS 제품명, 
+         SUM(B.BUY_QTY) AS 매입수량, 
+         SUM(C.CART_QTY) AS 매출수량
+    FROM PROD A
+    LEFT OUTER JOIN BUYPROD B ON(A.PROD_ID=B.BUY_PROD 
+     AND B.BUY_DATE BETWEEN TO_DATE('20200601') AND TO_DATE('20200630')
+    LEFT OUTER JOIN CART C ON(C.CART_PROD=A.PROD_ID AND C.CART_NO LIKE '202006%')
+    GROUP BY A.PROD_ID, A.PROD_NAME
+    ORDER BY 1
+    
    
    
    
