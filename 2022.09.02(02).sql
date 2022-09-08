@@ -27,3 +27,90 @@
                           하는 DML명령을 사용할 수 없음(뷰에만 적용)
 ****'WITH READ ONLY'와 'WITH CHECK OPTION'는 같이 사용할 수 없음                          
     
+--사용예--
+  회원테이블에서 마일리지가 3000이상인 회원의 회원번호, 회원명, 직업, 마일리지로 뷰를 생성하시오
+  
+  CREATE OR REPLACE VIEW V_MEM01(MID,MNAME,MJOB,MILE)
+  AS 
+  SELECT MEM_ID AS 회원번호, 
+         MEM_NAME AS 회원명, 
+         MEM_JOB AS 직업, 
+         MEM_MILEAGE AS 마일리지
+    FROM MEMBER
+   WHERE MEM_MILEAGE>=3000; 
+    
+    
+  SELECT * FROM V_MEM01; 
+    
+  **V_MEM01에서 오철희회원(k001)의 마일리지를 2000으로 변경
+  
+  UPDATE V_MEM01
+     SET MEM_MILEAGE=2000
+   WHERE MEM_ID = 'k001';  
+    
+  **MEMEBER테이블에서 오철희회원(K001)의 마일리지를 5000으로 변경
+  UPDATE MEMBER
+     SET MEM_MILEAGE = 5000
+   WHERE MEM_ID = 'k001';  
+    
+  **MEMEBER테이블에서 모든 회원들의 마일리지를 1000씩 추가 지급하시오
+  UPDATE MEMBER
+     SET MEM_MILEAGE = MEM_MILEAGE + 1000
+    
+  (읽기전용)
+  CREATE OR REPLACE VIEW V_MEM01(MID,MNAME,MJOB,MILE)
+  AS 
+  SELECT MEM_ID AS 회원번호, 
+         MEM_NAME AS 회원명, 
+         MEM_JOB AS 직업, 
+         MEM_MILEAGE AS 마일리지
+    FROM MEMBER
+   WHERE MEM_MILEAGE>=3000 
+    WITH READ ONLY;
+    
+  SELECT * FROM V_MEM01; 
+  
+  **MEMBER테이블에서 모든 회원의 마일리지를 1000씩 감소시키시오
+  UPDATE MEMBER
+     SET MEM_MILEAGE = MEM_MILEAGE - 1000
+     
+  COMMIT;      
+     
+  **VIEW V_MEM01의 자료에서 오철희 회원의 마일리지('k001')를 3700으로 변경
+  UPDATE V_MEM01
+     SET MILE = 3700
+   WHERE MID = 'k001'  
+     
+  (조건뷰)
+  CREATE OR REPLACE VIEW V_MEM01(MID,MNAME,MJOB,MILE)
+  AS 
+  SELECT MEM_ID AS 회원번호, 
+         MEM_NAME AS 회원명, 
+         MEM_JOB AS 직업, 
+         MEM_MILEAGE AS 마일리지
+    FROM MEMBER
+   WHERE MEM_MILEAGE>=3000 
+    WITH CHECK OPTION;
+    
+  SELECT * FROM V_MEM01;    
+     
+  **뷰 V_MEM01에서 신용환회원('c001')의 마일리지를 5500으로 변경하시오
+  --WHERE 조건을 위배하지 않으면 변경가능--
+  UPDATE V_MEM01
+     SET MILE = 5500
+   WHERE MID = 'c001'
+   -->원본 테이블의 데이터도 변경됨 
+     
+  **뷰 V_MEM01에서 신용환회원('c001')의 마일리지를 1500으로 변경하시오   
+  UPDATE V_MEM01
+     SET MILE = 1500
+   WHERE MID = 'c001'   
+  -->WHERE  조건을 위배해서 안됨   
+     
+  UPDATE MEMBER
+     SET MEM_MILEAGE = 1500
+   WHERE MEM_ID = 'c001'   
+     
+  ROLLBACK ;  
+     
+     
